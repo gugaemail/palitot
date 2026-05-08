@@ -59,12 +59,12 @@ export default async function MemoriaPage({ params }: Props) {
         {memory.cover_url && (
           <div
             className="relative w-full rounded-3xl overflow-hidden mb-10"
-            style={{ aspectRatio: "16/9", border: "2px solid var(--sand)" }}
+            style={{ border: "2px solid var(--sand)" }}
           >
             <img
               src={memory.cover_url}
               alt={memory.title}
-              className="w-full h-full object-cover"
+              className="w-full h-auto block"
             />
           </div>
         )}
