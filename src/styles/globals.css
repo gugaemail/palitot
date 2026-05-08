@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================
+   Design Tokens
+   ============================================================= */
+:root {
+  --moss:       #2D4A2D;
+  --moss-light: #3D6B3D;
+  --terra:      #C9956A;
+  --terra-dark: #A8754A;
+  --ivory:      #F7F3ED;
+  --ivory-warm: #F2E8DC;
+  --sand:       #E8DDD0;
+  --bark:       #8B6F5E;
+  --bark-dark:  #5A4A40;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  'DM Sans', system-ui, sans-serif;
+
+  --transition-base: 300ms ease;
+  --transition-slow: 600ms ease;
+}
+
+/* =============================================================
+   Base
+   ============================================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ivory);
+  color: var(--bark-dark);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* =============================================================
+   Tipografia
+   ============================================================= */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  color: var(--moss);
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); }
+h3 { font-size: clamp(1.25rem, 2.5vw, 1.75rem); }
+
+p { margin-bottom: 1rem; }
+p:last-child { margin-bottom: 0; }
+
+/* =============================================================
+   Componentes reutilizáveis
+   ============================================================= */
+
+/* Eyebrow label — ex: "Verão de 1994" */
+.label-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--terra);
+}
+
+/* Linha decorativa */
+.divider-organic {
+  width: 48px;
+  height: 1.5px;
+  background: var(--terra);
+  border-radius: 999px;
+  margin: 1.5rem 0;
+}
+
+/* Dot da timeline */
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--terra);
+  border-radius: 50%;
+  border: 2px solid var(--ivory);
+  outline: 2px solid var(--terra);
+  flex-shrink: 0;
+}
+
+/* Card de memória */
+.memory-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--sand);
+  overflow: hidden;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.memory-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(45, 74, 45, 0.08);
+}
+
+/* Botão primário */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: var(--moss);
+  color: var(--ivory);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: background var(--transition-base), transform var(--transition-base);
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--moss-light);
+  transform: translateY(-1px);
+}
+
+/* Botão secundário */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: transparent;
+  color: var(--moss);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: background var(--transition-base);
+  border: 1.5px solid var(--moss);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--ivory-warm);
+}
+
+/* Input de formulário */
+.field-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: white;
+  border: 1.5px solid var(--sand);
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--bark-dark);
+  transition: border-color var(--transition-base);
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: var(--moss);
+}
+
+.field-input::placeholder {
+  color: var(--bark);
+  opacity: 0.6;
+}
+
+/* =============================================================
+   Animações de entrada
+   ============================================================= */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =============================================================
+   Prose — conteúdo das memórias
+   ============================================================= */
+.prose-memory {
+  color: var(--bark-dark);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+
+.prose-memory p {
+  margin-bottom: 1.5rem;
+}
+
+.prose-memory p:last-child {
+  margin-bottom: 0;
+}
+
+/* =============================================================
+   Scrollbar sutil
+   ============================================================= */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ivory);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sand);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--terra);
+}
