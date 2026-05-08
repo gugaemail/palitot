@@ -46,7 +46,7 @@ export default async function HomePage() {
         />
 
         <div className="relative max-w-2xl mx-auto animate-fade-up">
-          <p className="label-eyebrow mb-6">Dia das Mães · 2025</p>
+          <p className="label-eyebrow mb-6">Dia das Mães · 2026</p>
 
           <h1
             className="font-serif text-moss mb-6"
@@ -68,7 +68,7 @@ export default async function HomePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/entrar?redirect=/memoria" className="btn-primary">
+            <Link href="/memoria" className="btn-primary">
               Ver nossas memórias
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                 <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -155,7 +155,7 @@ export default async function HomePage() {
         </div>
 
         <div className="text-center mt-4">
-          <Link href="/entrar?redirect=/memoria" className="btn-secondary">
+          <Link href="/memoria" className="btn-secondary">
             Ver todas as memórias
           </Link>
         </div>
@@ -203,7 +203,7 @@ export default async function HomePage() {
             </div>
 
             <div className="text-center mt-10">
-              <Link href="/entrar?redirect=/mural" className="btn-primary">
+              <Link href="/mural" className="btn-primary">
                 Deixar minha mensagem
               </Link>
             </div>
@@ -220,7 +220,7 @@ export default async function HomePage() {
           Família Palitot
         </p>
         <p className="text-xs opacity-50 tracking-widest uppercase" style={{ letterSpacing: "0.14em" }}>
-          Feito com amor · 2025
+          Feito com amor · 2026
         </p>
       </footer>
     </main>

@@ -12,6 +12,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/memoria";
+  const urlError = searchParams.get("error");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +85,16 @@ function LoginForm() {
           Digite seu email para receber um link de acesso. Simples assim.
         </p>
       </div>
+
+      {urlError === "link_expirado" && (
+        <div
+          className="p-4 rounded-xl text-sm leading-relaxed mb-6"
+          style={{ background: "#FFF5F0", border: "1px solid #FFD5C2", color: "#8B3A1A" }}
+          role="alert"
+        >
+          Seu link de acesso expirou ou já foi usado. Solicite um novo link abaixo.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

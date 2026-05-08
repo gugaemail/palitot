@@ -1,32 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 
 export default function MuralMessageForm() {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined);
   const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() || !user) return;
 
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      setError("Você precisa estar logado para enviar uma mensagem.");
-      setLoading(false);
-      return;
-    }
-
     const { error } = await supabase.from("mural_messages").insert({
       author_id: user.id,
       content: content.trim(),
@@ -58,6 +58,25 @@ export default function MuralMessageForm() {
         >
           Escrever outra mensagem
         </button>
+      </div>
+    );
+  }
+
+  if (user === null) {
+    return (
+      <div className="py-4 text-center">
+        <p className="text-bark text-sm mb-3">
+          Faça parte desta história e deixe sua mensagem.
+        </p>
+        <Link
+          href="/entrar?redirect=/mural"
+          className="btn-primary text-sm inline-flex items-center gap-2"
+        >
+          Entrar para enviar uma mensagem
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+            <path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
       </div>
     );
   }

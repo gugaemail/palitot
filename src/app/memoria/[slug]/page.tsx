@@ -180,7 +180,7 @@ export default async function MemoriaPage({ params }: Props) {
             </div>
           )}
 
-          <CommentForm memoryId={memory.id} />
+          <CommentForm memoryId={memory.id} slug={slug} />
         </section>
 
         {/* Navegação prev/next */}

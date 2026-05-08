@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Rotas que exigem autenticação
-const PROTECTED_ROUTES = ["/mural", "/memoria", "/painel", "/api/comentarios", "/api/mensagens"];
+const PROTECTED_ROUTES = ["/painel", "/api/comentarios", "/api/mensagens"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
