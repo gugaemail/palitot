@@ -153,7 +153,7 @@ export default async function MemoriasPage() {
                       {/* Capa */}
                       {memory.cover_url && (
                         <div
-                          className="hidden sm:block w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105"
+                          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex-shrink-0 transition-transform group-hover:scale-105"
                           style={{ border: "2px solid var(--sand)" }}
                         >
                           <img
