@@ -26,18 +26,14 @@ function LoginForm() {
       email: email.trim().toLowerCase(),
       options: {
         emailRedirectTo: `${window.location.origin}/api/auth/callback?redirect=${redirect}`,
-        shouldCreateUser: false, // Apenas membros pré-cadastrados
+        shouldCreateUser: true,
       },
     });
 
     setLoading(false);
 
     if (error) {
-      if (error.message.includes("not found") || error.message.includes("invalid")) {
-        setError("Este email não está cadastrado na família Palitot. Entre em contato com Pedro para ser adicionado.");
-      } else {
-        setError("Ocorreu um erro. Tente novamente em instantes.");
-      }
+      setError("Ocorreu um erro. Tente novamente em instantes.");
     } else {
       setSent(true);
     }
