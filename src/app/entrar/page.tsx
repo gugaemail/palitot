@@ -7,74 +7,61 @@ import { Suspense } from "react";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/memoria";
   const urlError = searchParams.get("error");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleEmailPassword(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !password) return;
 
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback?redirect=${redirect}`,
-        shouldCreateUser: true,
-      },
+      password,
     });
 
     setLoading(false);
 
     if (error) {
-      console.error("[entrar] signInWithOtp error:", error.status, error.message);
-      if (error.message.toLowerCase().includes("rate limit") || error.status === 429) {
-        setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+      if (error.message.includes("Invalid login credentials") || error.message.includes("invalid_credentials")) {
+        setError("Email ou senha incorretos.");
       } else {
-        setError(`Ocorreu um erro: ${error.message}`);
+        setError("Ocorreu um erro. Tente novamente.");
       }
     } else {
-      setSent(true);
+      window.location.href = redirect;
     }
   }
 
-  if (sent) {
-    return (
-      <div className="text-center">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-          style={{ background: "var(--ivory-warm)", border: "2px solid var(--terra)" }}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="var(--terra)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-        <h2 className="font-serif text-moss text-2xl mb-3">Verifique seu email</h2>
-        <p className="text-bark leading-relaxed">
-          Enviamos um link mágico para <strong className="text-moss">{email}</strong>.
-        </p>
-        <p className="text-bark text-sm mt-2 opacity-70">
-          Clique no link para entrar. O link expira em 1 hora.
-        </p>
-        <button
-          className="mt-8 text-sm text-bark underline underline-offset-4"
-          onClick={() => { setSent(false); setEmail(""); }}
-        >
-          Usar outro email
-        </button>
-      </div>
-    );
+  async function handleGoogle() {
+    setLoadingGoogle(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/api/auth/callback?redirect=${redirect}`,
+      },
+    });
+
+    if (error) {
+      setLoadingGoogle(false);
+      setError("Erro ao conectar com Google. Tente novamente.");
+    }
   }
 
   return (
     <>
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <p className="label-eyebrow mb-4">Área familiar</p>
         <h1
           className="font-serif text-moss mb-3"
@@ -82,9 +69,6 @@ function LoginForm() {
         >
           Bem-vindo de volta
         </h1>
-        <p className="text-bark text-sm leading-relaxed max-w-xs mx-auto">
-          Digite seu email para receber um link de acesso. Simples assim.
-        </p>
       </div>
 
       {urlError === "link_expirado" && (
@@ -93,14 +77,48 @@ function LoginForm() {
           style={{ background: "#FFF5F0", border: "1px solid #FFD5C2", color: "#8B3A1A" }}
           role="alert"
         >
-          Seu link de acesso expirou ou já foi usado. Solicite um novo link abaixo.
+          Seu link de acesso expirou ou já foi usado. Faça login abaixo.
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Google */}
+      <button
+        type="button"
+        onClick={handleGoogle}
+        disabled={loadingGoogle || loading}
+        className="w-full flex items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all"
+        style={{
+          border: "1.5px solid var(--sand)",
+          background: "white",
+          color: "var(--bark)",
+          opacity: loadingGoogle || loading ? 0.6 : 1,
+        }}
+      >
+        {!loadingGoogle ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        ) : (
+          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        )}
+        {loadingGoogle ? "Conectando…" : "Entrar com Google"}
+      </button>
+
+      {/* Divisor */}
+      <div className="flex items-center gap-3 my-6">
+        <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
+        <span className="text-xs text-bark opacity-50">ou</span>
+        <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
+      </div>
+
+      {/* Email + senha */}
+      <form onSubmit={handleEmailPassword} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm text-bark mb-2 font-medium">
-            Seu email
+            Email
           </label>
           <input
             id="email"
@@ -110,8 +128,23 @@ function LoginForm() {
             placeholder="seu@email.com.br"
             required
             className="field-input"
-            autoFocus
             autoComplete="email"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm text-bark mb-2 font-medium">
+            Senha
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            className="field-input"
+            autoComplete="current-password"
           />
         </div>
 
@@ -127,11 +160,11 @@ function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading || !email.trim()}
+          disabled={loading || loadingGoogle || !email.trim() || !password}
           className="btn-primary w-full justify-center mt-2"
-          style={{ opacity: loading || !email.trim() ? 0.6 : 1 }}
+          style={{ opacity: loading || loadingGoogle || !email.trim() || !password ? 0.6 : 1 }}
         >
-          {loading ? "Enviando…" : "Receber link de acesso"}
+          {loading ? "Entrando…" : "Entrar"}
         </button>
       </form>
     </>
@@ -144,7 +177,6 @@ export default function EntrarPage() {
       className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
       style={{ background: "linear-gradient(160deg, #F7F3ED 0%, #F2E8DC 100%)" }}
     >
-      {/* Logo */}
       <a
         href="/"
         className="font-serif text-moss text-sm tracking-widest uppercase mb-12 opacity-60 hover:opacity-100 transition-opacity"
@@ -153,7 +185,6 @@ export default function EntrarPage() {
         Família Palitot
       </a>
 
-      {/* Card */}
       <div
         className="w-full max-w-sm rounded-3xl p-8 sm:p-10"
         style={{ background: "white", border: "1px solid var(--sand)" }}
@@ -163,7 +194,6 @@ export default function EntrarPage() {
         </Suspense>
       </div>
 
-      {/* Rodapé sutil */}
       <p className="text-xs text-bark opacity-40 mt-8 text-center max-w-xs leading-relaxed">
         Site privado da família Palitot. Acesso somente para membros cadastrados.
       </p>
