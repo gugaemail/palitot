@@ -33,7 +33,12 @@ function LoginForm() {
     setLoading(false);
 
     if (error) {
-      setError("Ocorreu um erro. Tente novamente em instantes.");
+      console.error("[entrar] signInWithOtp error:", error.status, error.message);
+      if (error.message.toLowerCase().includes("rate limit") || error.status === 429) {
+        setError("Muitas tentativas. Aguarde alguns minutos e tente novamente.");
+      } else {
+        setError(`Ocorreu um erro: ${error.message}`);
+      }
     } else {
       setSent(true);
     }
