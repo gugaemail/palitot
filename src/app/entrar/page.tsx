@@ -6,8 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 function LoginForm() {
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,23 +17,75 @@ function LoginForm() {
   const redirect = searchParams.get("redirect") ?? "/memoria";
   const urlError = searchParams.get("error");
 
-  async function handleEmailPassword(e: React.FormEvent) {
+  function switchMode(next: "login" | "register") {
+    setMode(next);
+    setError(null);
+    setPassword("");
+    setPasswordConfirm("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) return;
+
+    if (mode === "register" && password !== passwordConfirm) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+
+    if (mode === "register") {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (signUpError) {
+        setLoading(false);
+        if (signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")) {
+          setError("Este email já está cadastrado. Faça login.");
+        } else {
+          setError("Erro ao criar conta. Tente novamente.");
+        }
+        return;
+      }
+
+      // Após cadastro, faz login automaticamente
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      setLoading(false);
+
+      if (signInError) {
+        setError("Conta criada! Agora faça o login com seu email e senha.");
+        setMode("login");
+      } else {
+        window.location.href = redirect;
+      }
+      return;
+    }
+
+    // Login
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
 
     setLoading(false);
 
-    if (error) {
-      if (error.message.includes("Invalid login credentials") || error.message.includes("invalid_credentials")) {
+    if (signInError) {
+      if (signInError.message.includes("Invalid login credentials") || signInError.message.includes("invalid_credentials")) {
         setError("Email ou senha incorretos.");
       } else {
         setError("Ocorreu um erro. Tente novamente.");
@@ -67,7 +121,7 @@ function LoginForm() {
           className="font-serif text-moss mb-3"
           style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", fontStyle: "italic" }}
         >
-          Bem-vindo de volta
+          {mode === "login" ? "Bem-vindo de volta" : "Criar conta"}
         </h1>
       </div>
 
@@ -81,41 +135,44 @@ function LoginForm() {
         </div>
       )}
 
-      {/* Google */}
-      <button
-        type="button"
-        onClick={handleGoogle}
-        disabled={loadingGoogle || loading}
-        className="w-full flex items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all"
-        style={{
-          border: "1.5px solid var(--sand)",
-          background: "white",
-          color: "var(--bark)",
-          opacity: loadingGoogle || loading ? 0.6 : 1,
-        }}
-      >
-        {!loadingGoogle ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        ) : (
-          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-        )}
-        {loadingGoogle ? "Conectando…" : "Entrar com Google"}
-      </button>
+      {/* Google — apenas no login */}
+      {mode === "login" && (
+        <>
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={loadingGoogle || loading}
+            className="w-full flex items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all"
+            style={{
+              border: "1.5px solid var(--sand)",
+              background: "white",
+              color: "var(--bark)",
+              opacity: loadingGoogle || loading ? 0.6 : 1,
+            }}
+          >
+            {!loadingGoogle ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+            ) : (
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            )}
+            {loadingGoogle ? "Conectando…" : "Entrar com Google"}
+          </button>
 
-      {/* Divisor */}
-      <div className="flex items-center gap-3 my-6">
-        <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
-        <span className="text-xs text-bark opacity-50">ou</span>
-        <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
-      </div>
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
+            <span className="text-xs text-bark opacity-50">ou</span>
+            <div className="flex-1 h-px" style={{ background: "var(--sand)" }} />
+          </div>
+        </>
+      )}
 
-      {/* Email + senha */}
-      <form onSubmit={handleEmailPassword} className="space-y-4">
+      {/* Formulário email + senha */}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm text-bark mb-2 font-medium">
             Email
@@ -129,6 +186,7 @@ function LoginForm() {
             required
             className="field-input"
             autoComplete="email"
+            autoFocus
           />
         </div>
 
@@ -143,10 +201,30 @@ function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
+            minLength={6}
             className="field-input"
-            autoComplete="current-password"
+            autoComplete={mode === "register" ? "new-password" : "current-password"}
           />
         </div>
+
+        {mode === "register" && (
+          <div>
+            <label htmlFor="passwordConfirm" className="block text-sm text-bark mb-2 font-medium">
+              Confirmar senha
+            </label>
+            <input
+              id="passwordConfirm"
+              type="password"
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={6}
+              className="field-input"
+              autoComplete="new-password"
+            />
+          </div>
+        )}
 
         {error && (
           <div
@@ -160,13 +238,43 @@ function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading || loadingGoogle || !email.trim() || !password}
+          disabled={loading || loadingGoogle || !email.trim() || !password || (mode === "register" && !passwordConfirm)}
           className="btn-primary w-full justify-center mt-2"
-          style={{ opacity: loading || loadingGoogle || !email.trim() || !password ? 0.6 : 1 }}
+          style={{ opacity: loading || loadingGoogle || !email.trim() || !password || (mode === "register" && !passwordConfirm) ? 0.6 : 1 }}
         >
-          {loading ? "Entrando…" : "Entrar"}
+          {loading
+            ? mode === "register" ? "Criando conta…" : "Entrando…"
+            : mode === "register" ? "Criar conta" : "Entrar"
+          }
         </button>
       </form>
+
+      {/* Toggle login / cadastro */}
+      <p className="text-center text-sm text-bark mt-6 opacity-70">
+        {mode === "login" ? (
+          <>
+            Ainda não tem conta?{" "}
+            <button
+              type="button"
+              onClick={() => switchMode("register")}
+              className="underline underline-offset-4 hover:opacity-100"
+            >
+              Criar conta
+            </button>
+          </>
+        ) : (
+          <>
+            Já tem conta?{" "}
+            <button
+              type="button"
+              onClick={() => switchMode("login")}
+              className="underline underline-offset-4 hover:opacity-100"
+            >
+              Fazer login
+            </button>
+          </>
+        )}
+      </p>
     </>
   );
 }
