@@ -13,6 +13,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registered, setRegistered] = useState(false);
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/memoria";
   const urlError = searchParams.get("error");
@@ -47,10 +48,14 @@ function LoginForm() {
       const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?redirect=${redirect}`,
+        },
       });
 
+      setLoading(false);
+
       if (signUpError) {
-        setLoading(false);
         if (signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")) {
           setError("Este email já está cadastrado. Faça login.");
         } else {
@@ -59,20 +64,7 @@ function LoginForm() {
         return;
       }
 
-      // Após cadastro, faz login automaticamente
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password,
-      });
-
-      setLoading(false);
-
-      if (signInError) {
-        setError("Conta criada! Agora faça o login com seu email e senha.");
-        setMode("login");
-      } else {
-        window.location.href = redirect;
-      }
+      setRegistered(true);
       return;
     }
 
@@ -111,6 +103,35 @@ function LoginForm() {
       setLoadingGoogle(false);
       setError("Erro ao conectar com Google. Tente novamente.");
     }
+  }
+
+  if (registered) {
+    return (
+      <div className="text-center">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+          style={{ background: "var(--ivory-warm)", border: "2px solid var(--terra)" }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="var(--terra)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <h2 className="font-serif text-moss text-2xl mb-3">Verifique seu email</h2>
+        <p className="text-bark leading-relaxed">
+          Enviamos um link de confirmação para{" "}
+          <strong className="text-moss">{email}</strong>.
+        </p>
+        <p className="text-bark text-sm mt-2 opacity-70">
+          Clique no link para ativar sua conta e entrar.
+        </p>
+        <button
+          className="mt-8 text-sm text-bark underline underline-offset-4"
+          onClick={() => { setRegistered(false); setMode("login"); setPassword(""); setPasswordConfirm(""); }}
+        >
+          Voltar para o login
+        </button>
+      </div>
+    );
   }
 
   return (
