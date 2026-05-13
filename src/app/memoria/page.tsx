@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getMemories } from "@/lib/queries";
 import { formatMemoryDate } from "@/lib/utils";
+import { createServerClientInstance } from "@/lib/supabase";
+import NavAuth from "@/components/NavAuth";
 
 export const metadata: Metadata = {
   title: "Memórias",
 };
 
 export default async function MemoriasPage() {
-  const memories = await getMemories();
+  const [memories, supabase] = await Promise.all([
+    getMemories(),
+    createServerClientInstance(),
+  ]);
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Agrupa por década para contexto visual
   const byDecade = memories.reduce<Record<string, typeof memories>>(
@@ -48,6 +54,7 @@ export default async function MemoriasPage() {
           <Link href="/painel" className="text-sm text-bark hover:text-moss transition-colors">
             Painel
           </Link>
+          <NavAuth user={user} />
         </nav>
       </header>
 

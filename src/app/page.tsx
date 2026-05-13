@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getMemories, getFeaturedMessages } from "@/lib/queries";
 import { formatMemoryDate } from "@/lib/utils";
+import { createServerClientInstance } from "@/lib/supabase";
+import NavAuth from "@/components/NavAuth";
 
 export const metadata: Metadata = {
   title: "Família Palitot · Para nossa mãe",
 };
 
 export default async function HomePage() {
-  const [memories, featuredMessages] = await Promise.all([
+  const [memories, featuredMessages, supabase] = await Promise.all([
     getMemories(),
     getFeaturedMessages(),
+    createServerClientInstance(),
   ]);
+  const { data: { user } } = await supabase.auth.getUser();
 
   const previewMemories = memories.slice(0, 3);
 
@@ -25,9 +29,7 @@ export default async function HomePage() {
         >
           Família Palitot
         </span>
-        <Link href="/entrar" className="btn-secondary text-xs px-4 py-2">
-          Entrar
-        </Link>
+        <NavAuth user={user} />
       </header>
 
       {/* ── Hero ───────────────────────────────────── */}
